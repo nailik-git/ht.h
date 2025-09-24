@@ -116,7 +116,7 @@ int main() {
   }
 
   sb_free(sb);
-  ht_deinit(ht);
-  char_ht_deinit(cht);
+  ht_deinit(&ht);
+  char_ht_deinit(&cht);
   return 0;
 }

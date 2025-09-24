@@ -89,7 +89,7 @@ typedef struct {
 HASH_TABLE HT_INIT(size_t inital_size);
 
 // frees all memory associated with hash table
-void HT_DEINIT(HASH_TABLE ht);
+void HT_DEINIT(HASH_TABLE* ht);
 
 // insert key-value pair with key and val,
 // if an item with the same key exists, its value will be overwritten.
@@ -153,11 +153,15 @@ HASH_TABLE HT_INIT(size_t initial_size) {
   return ht;
 }
 
-void HT_DEINIT(HASH_TABLE ht) {
-  free(ht.items);
+void HT_DEINIT(HASH_TABLE* ht) {
+  assert(ht->capacity && "hashtable isn't initialised");
+  free(ht->items);
+  ht->capacity = 0;
+  ht->count = 0;
 }
 
 void HT_INSERT(HASH_TABLE* ht, KEY_TYPE key, VAL_TYPE val) {
+  assert(ht->capacity && "hashtable isn't initialised");
   if(ht->count >= ht->capacity * POP) __HT_REALLOC(ht, ht->capacity * 2);
 
   uint64_t h = HASH(key) % ht->capacity;
@@ -171,6 +175,7 @@ void HT_INSERT(HASH_TABLE* ht, KEY_TYPE key, VAL_TYPE val) {
 }
 
 KEY_VALUE* HT_UPDATE(HASH_TABLE* ht, KEY_TYPE key) {
+  assert(ht->capacity && "hashtable isn't initialised");
   if(ht->count >= ht->capacity * POP) __HT_REALLOC(ht, ht->capacity * 2);
 
   uint64_t h = HASH(key) % ht->capacity;
@@ -190,6 +195,7 @@ KEY_VALUE* HT_UPDATE(HASH_TABLE* ht, KEY_TYPE key) {
 }
 
 KEY_VALUE* HT_FIND(HASH_TABLE ht, KEY_TYPE key) {
+  assert(ht.capacity && "hashtable isn't initialised");
   uint64_t h = HASH(key) % ht.capacity;
 
   for(size_t i = 0; i < ht.capacity; i++) {
@@ -202,6 +208,7 @@ KEY_VALUE* HT_FIND(HASH_TABLE ht, KEY_TYPE key) {
 }
 
 void HT_DELETE(HASH_TABLE* ht, KEY_TYPE key) {
+  assert(ht->capacity && "hashtable isn't initialised");
   KEY_VALUE* kv = HT_FIND(*ht, key);
   kv->occupied = 0;
   ht->count--;

@@ -83,6 +83,6 @@ int main() {
   }
 
   sb_free(sb);
-  ht_deinit(ht);
+  ht_deinit(&ht);
   return 0;
 }
