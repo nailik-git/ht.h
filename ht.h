@@ -101,6 +101,9 @@ void HT_INSERT(HASH_TABLE* ht, KEY_TYPE key, VAL_TYPE val);
 
 // get a reference to the key-value pair with the corresponding key,
 // if it does not exist, a new item is inserted.
+//
+// DO NOT USE IF YOU DELETED ELEMENTS, this might invalidate your hashtable.
+// in this case, use ht_find and ht_insert instead
 KEY_VALUE* HT_UPDATE(HASH_TABLE* ht, KEY_TYPE key);
 
 // get a reference to the key-value pair with the corresponding key,
@@ -108,6 +111,8 @@ KEY_VALUE* HT_UPDATE(HASH_TABLE* ht, KEY_TYPE key);
 KEY_VALUE* HT_FIND(HASH_TABLE ht, KEY_TYPE key);
 
 // deletes key-value pair with corresponding key.
+// try to avoid this function, since the find function will be slow,
+// if the item isn't in the table
 void HT_DELETE(HASH_TABLE* ht, KEY_TYPE key);
 
 // -------------------------------------------------
@@ -126,15 +131,7 @@ void __HT_REALLOC(HASH_TABLE *ht, size_t s) {
   ht->items = calloc(s, sizeof(KEY_VALUE));
   ht->capacity = s;
   for(size_t i = 0; i < old_capacity; i++) {
-    if(old_items[i].occupied) {
-      uint64_t h = HASH(old_items[i].key) % ht->capacity;
-
-      while(ht->items[h].occupied && CMP(ht->items[h].key, old_items[i].key) == 0) h++;
-
-      ht->items[h].occupied = 1;
-      ht->items[h].key = old_items[i].key;
-      ht->items[h].val = old_items[i].val;
-    }
+    if(old_items[i].occupied) ht_insert(ht, old_items[i].key, old_items[i].val);
   }
 
   free(old_items);
@@ -166,7 +163,10 @@ void HT_INSERT(HASH_TABLE* ht, KEY_TYPE key, VAL_TYPE val) {
 
   uint64_t h = HASH(key) % ht->capacity;
 
-  while(ht->items[h].occupied && CMP(ht->items[h].key, key) == 0) h = (h + 1) % ht->capacity;
+  for(size_t i = 0; i < ht->capacity; i++) {
+    if(!ht->items[h].occupied || CMP(ht->items[h].key, key) == 0) break;
+    h = (h + 1) % ht->capacity;
+  }
 
   if(!ht->items[h].occupied) ht->items[h].key = key;
   ht->items[h].occupied = 1;
@@ -199,8 +199,7 @@ KEY_VALUE* HT_FIND(HASH_TABLE ht, KEY_TYPE key) {
   uint64_t h = HASH(key) % ht.capacity;
 
   for(size_t i = 0; i < ht.capacity; i++) {
-    if(!ht.items[h].occupied) break;
-    if(CMP(ht.items[h].key, key) == 0) return &ht.items[h];
+    if(ht.items[h].occupied && CMP(ht.items[h].key, key) == 0) return &ht.items[h];
     h = (h + 1) % ht.capacity;
   }
 
