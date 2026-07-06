@@ -24,10 +24,10 @@ int sv_eq_cmp(String_View key1, String_View key2) {
   return memcmp(key1.data, key2.data, key1.count);
 }
 
-#define KEY_TYPE String_View
-#define VAL_TYPE int
-#define HASH(key) hash(key)
-#define CMP(key1, key2) sv_eq_cmp(key1, key2)
+#define HT_KEY_TYPE String_View
+#define HT_VAL_TYPE int
+#define HT_HASH(key) hash(key)
+#define HT_CMP(key1, key2) sv_eq_cmp(key1, key2)
 #include "ht.h"
 
 int compar(const void* a, const void* b) {
@@ -71,7 +71,7 @@ int main() {
     sv = sv_trim_left(sv);
     key = sv_chop_by_whitespace(&sv);
 
-    KV* kv = ht_update(&ht, key);
+    KV* kv = ht_get_or_insert(&ht, key);
     kv->val++;
   }
 

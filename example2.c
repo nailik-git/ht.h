@@ -24,22 +24,22 @@ int sv_eq_cmp(String_View key1, String_View key2) {
   return memcmp(key1.data, key2.data, key1.count);
 }
 
-#define KEY_TYPE String_View
-#define VAL_TYPE int
-#define HASH(key) hash(key)
-#define CMP(key1, key2) sv_eq_cmp(key1, key2)
+#define HT_KEY_TYPE String_View
+#define HT_VAL_TYPE int
+#define HT_HASH(key) hash(key)
+#define HT_CMP(key1, key2) sv_eq_cmp(key1, key2)
 #include "ht.h"
 
 #undef HT_H
-#undef KEY_TYPE
-#undef VAL_TYPE
-#undef HASH
-#undef CMP
-#define PREFIX char
-#define KEY_TYPE char
-#define VAL_TYPE int
-#define HASH(key) key
-#define CMP(key1, key2) key1 - key2
+#undef HT_KEY_TYPE
+#undef HT_VAL_TYPE
+#undef HT_HASH
+#undef HT_CMP
+#define HT_PREFIX char
+#define HT_KEY_TYPE char
+#define HT_VAL_TYPE int
+#define HT_HASH(key) key
+#define HT_CMP(key1, key2) key1 - key2
 #include "ht.h"
 
 int compar(const void* a, const void* b) {
@@ -93,12 +93,12 @@ int main() {
     sv = sv_trim_left(sv);
     key = sv_chop_by_whitespace(&sv);
 
-    KV* kv = ht_update(&ht, key);
+    KV* kv = ht_get_or_insert(&ht, key);
     kv->val++;
   }
 
   while(csv.count) {
-    char_KV* kv = char_ht_update(&cht, *csv.data++);
+    char_KV* kv = char_ht_get_or_insert(&cht, *csv.data++);
     kv->val++;
     csv.count--;
   }
