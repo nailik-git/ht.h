@@ -31,6 +31,14 @@ static_assert(0, "CMP not defined, expected function signature: int (*)(KEY_TYPE
 #define HT_POP 0.75
 #endif
 
+#ifndef HT_CALLOC
+#define HT_CALLOC calloc
+#endif
+
+#ifndef HT_FREE
+#define HT_FREE free
+#endif
+
 #undef HT_KEY_VALUE
 #undef HT_HASH_TABLE
 #undef HT_INIT
@@ -55,7 +63,7 @@ static_assert(0, "CMP not defined, expected function signature: int (*)(KEY_TYPE
 #define HT_GET_OR_INSERT __change_name(_ht_get_or_insert)
 #define HT_GET __change_name(_ht_get)
 #define HT_DELETE __change_name(_ht_delete)
-#define __HT_REALLOC __change_name(__ht_realloc)
+#define __HT_REALLOC __concat2(__, __change_name(_ht_realloc))
 #else
 #define HT_KEY_VALUE KV
 #define HT_HASH_TABLE HT
@@ -132,13 +140,13 @@ void __HT_REALLOC(HT_HASH_TABLE *ht, size_t s) {
 #else // NO_RESIZE
   HT_KEY_VALUE* old_items = ht->items;
   size_t old_capacity = ht->capacity;
-  ht->items = calloc(s, sizeof(HT_KEY_VALUE));
+  ht->items = HT_CALLOC(s, sizeof(HT_KEY_VALUE));
   ht->capacity = s;
   for(size_t i = 0; i < old_capacity; i++) {
     if(old_items[i].occupied) HT_INSERT(ht, old_items[i].key, old_items[i].val);
   }
 
-  free(old_items);
+  HT_FREE(old_items);
 #endif // NO_RESIZE
 }
 
@@ -146,7 +154,7 @@ void __HT_REALLOC(HT_HASH_TABLE *ht, size_t s) {
 HT_HASH_TABLE HT_INIT(size_t initial_size) {
   HT_HASH_TABLE ht = {0};
   ht.capacity = initial_size;
-  ht.items = calloc(initial_size, sizeof(HT_KEY_VALUE));
+  ht.items = HT_CALLOC(initial_size, sizeof(HT_KEY_VALUE));
   if(!ht.items) {
     fprintf(stderr, "ERROR: memory allocation failed: %s", strerror(errno));
   }
@@ -156,7 +164,7 @@ HT_HASH_TABLE HT_INIT(size_t initial_size) {
 
 void HT_DEINIT(HT_HASH_TABLE* ht) {
   assert(ht->capacity && "hashtable isn't initialised");
-  free(ht->items);
+  HT_FREE(ht->items);
   ht->capacity = 0;
   ht->count = 0;
 }
